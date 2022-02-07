@@ -73,11 +73,11 @@ const Navbar = ({ isAuthenticated }) => {
 
         <Navtab label="Documentation" index={4} value="/documentation" />
 
-        {!isAuthenticated && (
+        {/* {!isAuthenticated && (
           <Navtab label="Sign Up" index={5} value="https://cds.ahrq.gov/form/cds-authoring-tool-sign-up" isExternal />
         )}
 
-        <Navtab label="Contact Us" index={6} value="https://cds.ahrq.gov/contact-us" isExternal />
+        <Navtab label="Contact Us" index={6} value="https://cds.ahrq.gov/contact-us" isExternal /> */}
       </Tabs>
     </div>
   );

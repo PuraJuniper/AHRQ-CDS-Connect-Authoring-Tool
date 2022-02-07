@@ -14,6 +14,11 @@ import AhrqHeader from 'components/header/AhrqHeader';
 import CdsFooter from 'components/footer/CdsFooter';
 import AhrqFooter from 'components/footer/AhrqFooter';
 
+import { withRouter } from 'react-router-dom';
+import { sendDownloadArtifactRequest, sendValidateArtifactRequest } from 'actions/artifacts';
+import { fetchArtifacts } from 'queries/artifacts';
+const SAGEOpenArtifactEvName = 'SAGEOpenArtifact';
+
 class App extends Component {
   UNSAFE_componentWillMount() {
     // eslint-disable-line camelcase
@@ -39,6 +44,28 @@ class App extends Component {
     );
   }
 
+  // SAGE
+  componentDidMount() {
+    // Add event listener for triggers to open specified artifact
+    function openArtifactById(event) {
+      console.log('ahrq: Open artifact triggered by SAGE');
+      this.props.history.push(`/build/${event.detail.id}`);
+    }
+    window.document.addEventListener(SAGEOpenArtifactEvName, openArtifactById.bind(this), false);
+
+    // Send all existing artifacts as exported zips on initial app load
+    fetchArtifacts().then(async artifacts => {
+      console.log('ahrq: Sending artifacts:', artifacts);
+      for (const artifact of artifacts) {
+        try {
+          await sendDownloadArtifactRequest(artifact, { name: 'FHIR', version: '4.0.0' });
+        } catch (error) {
+          console.log('ahrq error:', error);
+        }
+      }
+    });
+  }
+
   render() {
     const { children, isAuthenticated } = this.props;
 
@@ -47,14 +74,14 @@ class App extends Component {
         <a className="skiplink" href="#maincontent">
           Skip to main content
         </a>
-        <Analytics gtmKey={process.env.REACT_APP_GTM_KEY} dapURL={process.env.REACT_APP_DAP_URL} />
-        <AhrqHeader />
+        {/* <Analytics gtmKey={process.env.REACT_APP_GTM_KEY} dapURL={process.env.REACT_APP_DAP_URL} />
+        <AhrqHeader /> */}
         <CdsHeader />
         <Navbar isAuthenticated={isAuthenticated} />
         {this.renderedErrorMessage()}
         {children}
-        <CdsFooter />
-        <AhrqFooter />
+        {/* <CdsFooter />
+        <AhrqFooter /> */}
       </div>
     );
   }
@@ -85,4 +112,4 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(App));

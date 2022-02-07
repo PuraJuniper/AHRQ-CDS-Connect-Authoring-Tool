@@ -73,7 +73,8 @@ export class Builder extends Component {
       showArtifactModal: false,
       showELMErrorModal: false,
       showMenu: false,
-      downloadMenuAnchorElement: null
+      downloadMenuAnchorElement: null,
+      sendingToSage: false
     };
   }
 
@@ -381,10 +382,10 @@ export class Builder extends Component {
     this.setState({ downloadMenuAnchorElement: null });
   };
 
-  downloadOptionSelected = (disabled, version) => {
+  downloadOptionSelected = async (disabled, version) => {
     const { artifact } = this.props;
-    if (!disabled) this.props.downloadArtifact(artifact, { name: 'FHIR', version });
-    this.handleCloseDownloadMenu();
+    if (!disabled) await this.props.downloadArtifact(artifact, { name: 'FHIR', version });
+    // this.handleCloseDownloadMenu();
   };
 
   // ----------------------- RENDER ---------------------------------------- //
@@ -467,14 +468,28 @@ export class Builder extends Component {
               aria-controls="download-menu"
               aria-haspopup="true"
               color="inherit"
-              onClick={this.handleClickDownloadMenu}
+              disabled={this.state.sendingToSage}
+              onClick={async () => {
+                // SAGE: only export as R4
+                this.setState({
+                  sendingToSage: true
+                });
+                try {
+                  await this.downloadOptionSelected(disableR4, '4.0.0');
+                } catch (err) {
+                  console.log('ahrq error sending to sage:', err);
+                }
+                this.setState({
+                  sendingToSage: false
+                });
+              }}
               startIcon={<GetAppIcon />}
               variant="contained"
             >
-              Download CQL
+              Send to SAGE
             </Button>
 
-            <Menu
+            {/* <Menu
               anchorEl={downloadMenuAnchorElement}
               id="download-menu"
               keepMounted
@@ -492,7 +507,7 @@ export class Builder extends Component {
               <MenuItem disabled={disableR4} onClick={() => this.downloadOptionSelected(disableR4, '4.0.0')}>
                 FHIR<sup>®</sup> R4
               </MenuItem>
-            </Menu>
+            </Menu> */}
 
             <Button
               color="inherit"

@@ -445,15 +445,26 @@ function downloadArtifactFailure(error) {
   };
 }
 
-function sendDownloadArtifactRequest(artifact, dataModel) {
+export function sendDownloadArtifactRequest(artifact, dataModel) {
   artifact.dataModel = dataModel;
-  const fileName = changeToCase(`${artifact.name}-v${artifact.version}-cql`, 'snakeCase');
+  // const fileName = changeToCase(`${artifact.name}-v${artifact.version}-cql`, 'snakeCase');
 
   return new Promise((resolve, reject) => {
     axios
       .post(`${API_BASE}/cql`, artifact, { responseType: 'blob' })
       .then(result => {
-        FileSaver.saveAs(result.data, `${fileName}.zip`);
+        // SAGE: send zip result in event to parent document
+        console.log('ahrq: Sending artifact: ', artifact);
+        const cqlZipEvent = new CustomEvent('AHRQSendToSAGE', {
+          detail: {
+            libraryZip: result.data,
+            libraryName: artifact.name,
+            libraryAhrqId: artifact._id
+          }
+        });
+        console.log('ahrq: Sending cql zip in event:', cqlZipEvent);
+        window.parent.document.dispatchEvent(cqlZipEvent);
+        // FileSaver.saveAs(result.data, `${fileName}.zip`);
         resolve(result.data);
       })
       .catch(error => reject(error));
@@ -466,7 +477,7 @@ export function clearArtifactValidationWarnings() {
   };
 }
 
-function sendValidateArtifactRequest(artifact) {
+export function sendValidateArtifactRequest(artifact) {
   return axios.post(`${API_BASE}/cql/validate`, artifact);
 }
 
